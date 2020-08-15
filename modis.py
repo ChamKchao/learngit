@@ -29,19 +29,15 @@ class TimeoutHTTPAdapter(HTTPAdapter):
         return super().send(request, **kwargs)
 
 
-retry_strategy = Retry(
-    total=3,
-    status_forcelist=[429, 500, 502, 503, 504],
-    method_whitelist=["HEAD", "GET", "OPTIONS"]
-)
-
-
 http = sessions.BaseUrlSession(base_url='https://modis.ornl.gov/rst/api/v1/')
 
-# Mount it for both http and https usage
-retries = Retry(total=3, backoff_factor=1,
-                status_forcelist=[429, 500, 502, 503, 504])
-http.mount("https://", TimeoutHTTPAdapter(timeout=10, max_retries=retries))
+http.mount("https://",
+           TimeoutHTTPAdapter(
+               timeout=10,
+               max_retries=Retry(total=3, backoff_factor=1,
+                                 status_forcelist=[
+                                     429, 500, 502, 503, 504],
+                                 method_whitelist=["GET"])))
 
 
 # Use following for a csv response: header = {'Accept': 'text/csv'}
